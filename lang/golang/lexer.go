@@ -1,0 +1,100 @@
+package golang
+
+import (
+	"github.com/rdeusser/parsekit/lexer"
+	"github.com/rdeusser/parsekit/token"
+)
+
+func NewLexer(options ...lexer.Option) *lexer.Lexer {
+	config := lexer.Config{
+		SkipWhitespace: true,
+		Rules: []lexer.Rule{
+			{Name: "LexIdentifier", Match: lexer.IsLetter, Action: lexer.LexIdentifier},
+			{Name: "LexString", Match: lexer.IsDoubleQuote, Action: lexer.LexString},
+			{Name: "LexRawString", Match: lexer.IsBackQuote, Action: lexer.LexRawString},
+			{Name: "LexNumber", Match: lexer.IsNumber, Action: lexer.LexNumber},
+			{Name: "LexOperator", Match: lexer.IsOperator, Action: lexer.LexOperator},
+		},
+		Operators: map[string]token.TokenType{
+			"+":   ADD,
+			"-":   SUB,
+			"*":   MUL,
+			"/":   QUO,
+			"%":   REM,
+			"&":   AND,
+			"|":   OR,
+			"^":   XOR,
+			"<<":  SHL,
+			">>":  SHR,
+			"&^":  AND_NOT,
+			"+=":  ADD_ASSIGN,
+			"-=":  SUB_ASSIGN,
+			"*=":  MUL_ASSIGN,
+			"/=":  QUO_ASSIGN,
+			"%=":  REM_ASSIGN,
+			"&=":  AND_ASSIGN,
+			"|=":  OR_ASSIGN,
+			"^=":  XOR_ASSIGN,
+			"<<=": SHL_ASSIGN,
+			">>=": SHR_ASSIGN,
+			"&^=": AND_NOT_ASSIGN,
+			"&&":  LAND,
+			"||":  LOR,
+			"<-":  ARROW,
+			"++":  INC,
+			"--":  DEC,
+			"==":  EQL,
+			"<":   LSS,
+			">":   GTR,
+			"=":   ASSIGN,
+			"!":   NOT,
+			"!=":  NEQ,
+			"<=":  LEQ,
+			">=":  GEQ,
+			":=":  DEFINE,
+			"...": ELLIPSIS,
+			"(":   LPAREN,
+			"[":   LBRACK,
+			"{":   LBRACE,
+			"":    COMMA,
+			".":   PERIOD,
+			")":   RPAREN,
+			"]":   RBRACK,
+			"}":   RBRACE,
+			";":   SEMICOLON,
+			":":   COLON,
+		},
+		Keywords: map[string]token.TokenType{
+			"break":       BREAK,
+			"case":        CASE,
+			"chan":        CHAN,
+			"const":       CONST,
+			"continue":    CONTINUE,
+			"default":     DEFAULT,
+			"defer":       DEFER,
+			"else":        ELSE,
+			"fallthrough": FALLTHROUGH,
+			"for":         FOR,
+			"func":        FUNC,
+			"go":          GO,
+			"goto":        GOTO,
+			"if":          IF,
+			"import":      IMPORT,
+			"interface":   INTERFACE,
+			"map":         MAP,
+			"package":     PACKAGE,
+			"range":       RANGE,
+			"return":      RETURN,
+			"select":      SELECT,
+			"struct":      STRUCT,
+			"switch":      SWITCH,
+			"type":        TYPE,
+			"var":         VAR,
+		},
+	}
+	lexer := lexer.New(config)
+	for _, option := range options {
+		option(lexer)
+	}
+	return lexer
+}
