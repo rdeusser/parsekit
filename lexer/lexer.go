@@ -128,7 +128,7 @@ func (l *Lexer) Lex(input string) ([]token.Token, error) {
 				}
 
 				if tok.Type == token.ILLEGAL {
-					return nil, fmt.Errorf("lexer error: illegal tok: %s: %q", tok, l.input[tok.Start.Pos:tok.End.Pos])
+					return nil, fmt.Errorf("lexer error: illegal token: %s: %q", tok, l.input[tok.Start.Pos:tok.End.Pos])
 				}
 
 				tokens = append(tokens, tok)
@@ -205,11 +205,11 @@ func (l *Lexer) EndRule(tok token.Token, err error) (token.Token, error) {
 	if tok.End.Pos >= len(l.input) {
 		tok.Literal = l.input[tok.Start.Pos:len(l.input)]
 	} else {
-		tok.Literal = l.input[tok.Start.Pos : tok.End.Pos+1]
+		tok.Literal = l.input[tok.Start.Pos:tok.End.Pos]
 	}
-	// If the user already set the type, we shouldn't try to look it up because we can't lookup things like strings. Only operators and keywords.
-	if tok.Type > 2000 {
-		tok.Type = l.LookupToken(tok.Literal)
+	// If the user already set the type, we shouldn't try to look it up because we can't look up things like strings. Only operators and keywords.
+	if typ := l.LookupToken(tok.Literal); typ != token.ILLEGAL {
+		tok.Type = typ
 	}
 	return tok, err
 }

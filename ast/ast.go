@@ -47,20 +47,69 @@ func (x *ExpressionStatement) Start() token.Position { return x.Expression.Start
 func (x *ExpressionStatement) End() token.Position   { return x.Expression.End() }
 
 type Identifier struct {
-	Name    string
-	NamePos token.Position
+	Pos  token.Position
+	Name string
 }
 
-func (x *Identifier) Start() token.Position { return x.NamePos }
+func (x *Identifier) Start() token.Position { return x.Pos }
 func (x *Identifier) End() token.Position {
 	return token.Position{
-		Pos:    x.NamePos.Pos + len(x.Name),
-		Line:   x.NamePos.Line,
-		Column: x.NamePos.Column + len(x.Name),
+		Pos:    x.Pos.Pos + len(x.Name),
+		Line:   x.Pos.Line,
+		Column: x.Pos.Column + len(x.Name),
 	}
 }
+
+type Package struct {
+	Token token.Position // position of 'package'
+	Name  *Identifier
+}
+
+func (x *Package) Start() token.Position { return x.Token }
+func (x *Package) End() token.Position   { return x.Name.End() }
+
+type Struct struct {
+	Token          token.Position // position of 'pub' or 'struct'
+	Public         bool
+	Name           *Identifier
+	TypeParameters *TypeParameters
+	Body           *Block
+}
+
+func (x *Struct) Start() token.Position { return x.Token }
+func (x *Struct) End() token.Position   { return x.Body.End() }
+
+type TypeParameters struct {
+	Lbrack token.Position // position of '['
+	List   []*TypeParameter
+	Rbrack token.Position // position of ']'
+}
+
+func (x *TypeParameters) Start() token.Position { return x.Lbrack }
+func (x *TypeParameters) End() token.Position   { return x.Rbrack }
+
+type TypeParameter struct {
+	Name *Identifier
+	Type *Identifier
+}
+
+func (x *TypeParameter) Start() token.Position { return x.Name.Start() }
+func (x *TypeParameter) End() token.Position   { return x.Type.End() }
+
+type Block struct {
+	Lbrace     token.Position
+	Statements []Statement
+	Rbrace     token.Position
+}
+
+func (x *Block) Start() token.Position { return x.Lbrace }
+func (x *Block) End() token.Position   { return x.Rbrace }
 
 func (x *DeclarationStatement) StatementNode() {}
 func (x *ExpressionStatement) StatementNode()  {}
 
+func (x *Package) DeclarationNode() {}
+func (x *Struct) DeclarationNode()  {}
+
 func (x *Identifier) ExpressionNode() {}
+func (x *Block) ExpressionNode()      {}

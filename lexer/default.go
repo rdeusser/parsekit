@@ -62,4 +62,10 @@ var DefaultConfig = Config{
 		";":   token.SEMICOLON,
 		":":   token.COLON,
 	},
+	Keywords: map[string]token.TokenType{
+		"package": token.PACKAGE,
+		"struct":  token.STRUCT,
+		"when":    token.WHEN,
+		"if":      token.IF,
+	},
 }

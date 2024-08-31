@@ -1,6 +1,6 @@
 module github.com/rdeusser/parsekit
 
-go 1.22.2
+go 1.22.3
 
 require (
 	github.com/hexops/autogold/v2 v2.2.1

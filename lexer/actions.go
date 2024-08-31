@@ -104,8 +104,8 @@ func LexOperator(l *Lexer, ch rune) (token.Token, error) {
 	op := l.Lookahead(maxLen)
 
 	for {
-		tok.Type = l.LookupToken(string(op))
 		op = l.Lookahead(maxLen)
+		tok.Type = l.LookupToken(string(op))
 		if maxLen < 0 {
 			return l.EndRule(tok, fmt.Errorf("invalid operator: %s", string(ch)))
 		}

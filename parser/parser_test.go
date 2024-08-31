@@ -30,13 +30,64 @@ func TestParser(t *testing.T) {
 				Nodes: []ast.Node{
 					&ast.Identifier{
 						Name: "foo",
-						NamePos: token.Position{
+						Pos: token.Position{
 							Line:   1,
 							Column: 1,
 						},
 					},
 				},
 			}),
+		},
+		"package": {
+			"package main",
+			Config{
+				Rules: []Rule{
+					{Name: "ParsePackage", Match: IsPackage, Action: ParsePackage},
+				},
+			},
+			assert.NoError,
+			autogold.Expect(&ast.File{Nodes: []ast.Node{
+				&ast.Package{
+					Token: token.Position{
+						Line:   1,
+						Column: 1,
+					},
+					Name: &ast.Identifier{
+						Pos: token.Position{
+							Pos:    8,
+							Line:   1,
+							Column: 9,
+						},
+						Name: "main",
+					},
+				},
+			}}),
+		},
+		"struct no fields": {
+			"struct Cache {}",
+			Config{
+				Rules: []Rule{
+					{Name: "ParseStruct", Match: IsStruct, Action: ParseStruct},
+				},
+			},
+			assert.NoError,
+			autogold.Expect(&ast.File{Nodes: []ast.Node{
+				&ast.Struct{
+					Token: token.Position{
+						Line:   1,
+						Column: 1,
+					},
+					Public: true,
+					Name: &ast.Identifier{
+						Pos: token.Position{
+							Pos:    7,
+							Line:   1,
+							Column: 8,
+						},
+						Name: "Cache",
+					},
+				},
+			}}),
 		},
 	}
 

@@ -209,6 +209,50 @@ func TestLexer(t *testing.T) {
 				},
 			}),
 		},
+		"braces": {
+			"{}",
+			Config{
+				Rules: []Rule{
+					{Name: "LexOperator", Match: IsOperator, Action: LexOperator},
+				},
+				Operators: map[string]token.TokenType{
+					"{":   2001,
+					"}":   2002,
+					"+":   2003,
+					"<<=": 2004,
+				},
+			},
+			assert.NoError,
+			autogold.Expect([]token.Token{
+				{
+					Type: token.TokenType(2001),
+					Start: token.Position{
+						Line:   1,
+						Column: 1,
+					},
+					End: token.Position{
+						Pos:    1,
+						Line:   1,
+						Column: 2,
+					},
+					Literal: "{",
+				},
+				{
+					Type: token.TokenType(2002),
+					Start: token.Position{
+						Pos:    1,
+						Line:   1,
+						Column: 2,
+					},
+					End: token.Position{
+						Pos:    2,
+						Line:   1,
+						Column: 3,
+					},
+					Literal: "}",
+				},
+			}),
+		},
 	}
 
 	for name, tt := range tests {

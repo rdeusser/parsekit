@@ -1,10 +1,13 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rdeusser/parsekit/token"
 )
+
+var ErrGotoNextRule = errors.New("goto next rule")
 
 type Error struct {
 	Parser       *Parser

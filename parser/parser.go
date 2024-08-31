@@ -7,12 +7,15 @@ import (
 	"github.com/rdeusser/parsekit"
 	"github.com/rdeusser/parsekit/ast"
 	"github.com/rdeusser/parsekit/lexer"
+	"github.com/rdeusser/parsekit/token"
 )
 
 // Parser is a generic parser implementation.
 type Parser struct {
 	l      *lexer.Lexer
 	config Config
+	pos    int
+	tokens []token.Token
 	logger parsekit.Logger
 }
 
@@ -44,6 +47,7 @@ func New(l *lexer.Lexer, config Config, options ...Option) *Parser {
 	parser := &Parser{
 		l:      l,
 		config: config,
+		tokens: make([]token.Token, 0),
 		logger: parsekit.DefaultLogger,
 	}
 
@@ -54,28 +58,26 @@ func New(l *lexer.Lexer, config Config, options ...Option) *Parser {
 	return parser
 }
 
-func (p *Parser) Parse(input string) (*ast.File, error) {
-	file := &ast.File{
+func (p *Parser) Parse(input string) (file *ast.File, err error) {
+	file = &ast.File{
 		Nodes: make([]ast.Node, 0),
 	}
 
-	tokens, err := p.l.Lex(input)
+	p.tokens, err = p.l.Lex(input)
 	if err != nil {
 		return nil, fmt.Errorf("parser error: %w", err)
 	}
 
-	pos := 0
-
-	for pos < len(tokens) {
-		curToken := tokens[pos]
+	for p.pos < len(p.tokens) {
+		curToken := p.tokens[p.pos]
 		matched := false
 		for _, rule := range p.config.Rules {
 			p.logger.Debug("Attempting to match %q with token %q", rule.Name, curToken)
 
-			if rule.Match(tokens[pos]) {
+			if rule.Match(curToken) {
 				p.logger.Debug("Running action %q", rule.Name)
 
-				node, consumed, err := rule.Action(p, tokens, pos)
+				node, err := rule.Action(p, curToken)
 				var perr Error
 				if errors.As(err, &perr) {
 					if perr.GotoNextRule {
@@ -85,11 +87,13 @@ func (p *Parser) Parse(input string) (*ast.File, error) {
 						_ = perr.Error()
 						return nil, perr
 					}
+				} else if errors.Is(err, ErrGotoNextRule) {
+					p.logger.Debug("Moving to next rule")
+					continue
 				} else if err != nil {
 					return nil, err
 				}
 
-				pos += consumed
 				file.Nodes = append(file.Nodes, node)
 				matched = true
 				break
@@ -98,9 +102,41 @@ func (p *Parser) Parse(input string) (*ast.File, error) {
 
 		if !matched {
 			// TODO(rdeusser): add output with line numbers and an up arrow at position.
-			return nil, fmt.Errorf("parser error: no rule to handle token %s", curToken)
+			return nil, fmt.Errorf("parser error: no rule to handle token %q", input[curToken.Start.Pos:curToken.End.Pos])
 		}
+
+		p.Next()
 	}
 
 	return file, nil
+}
+
+func (p *Parser) Lookahead(n int) []token.Token {
+	if p.pos+n >= len(p.tokens) {
+		return nil
+	}
+	return p.tokens[p.pos : p.pos+n]
+}
+
+func (p *Parser) Lookbehind(n int) []token.Token {
+	if p.pos-n < 0 {
+		return nil
+	}
+	return p.tokens[p.pos-n : p.pos]
+}
+
+func (p *Parser) Next() token.Token {
+	p.pos++
+	if p.pos >= len(p.tokens) {
+		return token.NoToken
+	}
+	return p.tokens[p.pos]
+}
+
+func (p *Parser) Backup() token.Token {
+	p.pos--
+	if p.pos < 0 {
+		return token.NoToken
+	}
+	return p.tokens[p.pos]
 }

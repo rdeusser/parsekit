@@ -78,6 +78,11 @@ const (
 	SEMICOLON // ;
 	COLON     // :
 
+	PACKAGE // package
+	STRUCT  // struct
+	WHEN    // when
+	IF      // if
+
 	// User-defined identifiers and basic type literals.
 	LiteralStart = 1000
 
